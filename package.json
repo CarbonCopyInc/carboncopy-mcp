@@ -1,6 +1,6 @@
 {
   "name": "@carbon-copy/mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "An MCP server that gives AI agents programmatic access to Carbon Copy — a Polymarket copy-trading platform.",
   "type": "module",
   "bin": {
