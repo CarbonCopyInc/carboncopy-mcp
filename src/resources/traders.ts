@@ -20,7 +20,7 @@ export function registerTraderResources(
           {
             uri: "carboncopy://traders",
             mimeType: "application/json",
-            text: JSON.stringify(data, null, 2),
+            text: JSON.stringify(data ?? [], null, 2),
           },
         ],
       };

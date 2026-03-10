@@ -21,7 +21,7 @@ export function registerPortfolioResources(
           {
             uri: "carboncopy://portfolio",
             mimeType: "application/json",
-            text: JSON.stringify(data, null, 2),
+            text: JSON.stringify(data ?? {}, null, 2),
           },
         ],
       };
