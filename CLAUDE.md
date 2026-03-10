@@ -8,7 +8,7 @@ MCP (Model Context Protocol) server that wraps the Carbon Copy REST API, enablin
 npm install
 npm run build         # TypeScript → dist/
 npm run dev           # Dev mode with watch
-npx @carboncopy/mcp  # Run via npx (after publish)
+npx @carbon-copy/mcp  # Run via npx (after publish)
 ```
 
 ## Configuration
@@ -20,7 +20,7 @@ Set `CARBONCOPY_API_KEY` env var (format: `cc_<64 hex chars>`).
   "mcpServers": {
     "carboncopy": {
       "command": "npx",
-      "args": ["@carboncopy/mcp"],
+      "args": ["@carbon-copy/mcp"],
       "env": { "CARBONCOPY_API_KEY": "cc_..." }
     }
   }
@@ -51,7 +51,7 @@ Carbon Copy has three repos that form the public API surface:
 |---|---|---|
 | `CarbonCopyInc/habakkuk` | App + Convex backend + REST API (source of truth) | Vercel + Convex |
 | `CarbonCopyInc/docs` | Mintlify API documentation | Mintlify |
-| `CarbonCopyInc/carboncopy-mcp` (this repo) | MCP server | npm (`@carboncopy/mcp`) |
+| `CarbonCopyInc/carboncopy-mcp` (this repo) | MCP server | npm (`@carbon-copy/mcp`) |
 
 ### Sync Rules
 

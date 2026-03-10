@@ -26,7 +26,7 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
   "mcpServers": {
     "carboncopy": {
       "command": "npx",
-      "args": ["-y", "@carboncopy/mcp"],
+      "args": ["-y", "@carbon-copy/mcp"],
       "env": {
         "CARBONCOPY_API_KEY": "cc_your_key_here"
       }
@@ -44,7 +44,7 @@ Add to `.cursor/mcp.json` in your project:
   "mcpServers": {
     "carboncopy": {
       "command": "npx",
-      "args": ["-y", "@carboncopy/mcp"],
+      "args": ["-y", "@carbon-copy/mcp"],
       "env": {
         "CARBONCOPY_API_KEY": "cc_your_key_here"
       }
