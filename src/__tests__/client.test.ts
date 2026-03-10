@@ -31,7 +31,9 @@ function createMockResponse(opts: MockResponseOptions = {}) {
   if (contentLength !== undefined) headers["content-length"] = contentLength;
 
   const jsonFn = vi.fn().mockResolvedValue(body);
-  const textFn = vi.fn().mockResolvedValue(bodyText);
+  const textFn = vi.fn().mockResolvedValue(
+    bodyText || (body !== null ? JSON.stringify(body) : "")
+  );
 
   // The clone is only used for error-path json parsing
   const cloneJsonFn = cloneJsonThrows

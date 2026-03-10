@@ -21,7 +21,7 @@ export function registerAccountTools(
     async () => {
       const data = await client.getAccount();
       return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
     }
   );
@@ -41,7 +41,7 @@ export function registerAccountTools(
     async () => {
       const data = await client.health();
       return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
     }
   );

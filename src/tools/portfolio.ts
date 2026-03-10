@@ -21,7 +21,7 @@ export function registerPortfolioTools(
     async () => {
       const data = await client.getPortfolio();
       return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
     }
   );
@@ -60,7 +60,7 @@ export function registerPortfolioTools(
     async (params) => {
       const data = await client.getPortfolioHistory(params);
       return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
     }
   );
@@ -99,7 +99,7 @@ export function registerPortfolioTools(
     async (params) => {
       const data = await client.getPositions(params);
       return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
     }
   );

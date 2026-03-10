@@ -35,7 +35,7 @@ function createMockFetchResponse(body: unknown = {}) {
     statusText: "OK",
     headers: { get: () => null },
     json: vi.fn().mockResolvedValue(body),
-    text: vi.fn().mockResolvedValue(""),
+    text: vi.fn().mockResolvedValue(JSON.stringify(body)),
     clone: vi.fn().mockReturnValue({ json: vi.fn().mockResolvedValue(body) }),
   };
 }
@@ -320,6 +320,7 @@ describe("Tool Registration", () => {
       };
 
       expect(result.content[0].type).toBe("text");
+      expect(JSON.parse(result.content[0].text)).toEqual({ success: true });
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
       expect(url).toContain("/api/v1/traders/0xabc");
       expect(init.method).toBe("DELETE");

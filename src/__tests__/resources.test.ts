@@ -35,7 +35,7 @@ function createMockFetchResponse(body: unknown = {}) {
     statusText: "OK",
     headers: { get: () => null },
     json: vi.fn().mockResolvedValue(body),
-    text: vi.fn().mockResolvedValue(""),
+    text: vi.fn().mockResolvedValue(JSON.stringify(body)),
     clone: vi.fn().mockReturnValue({ json: vi.fn().mockResolvedValue(body) }),
   };
 }

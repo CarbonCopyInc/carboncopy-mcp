@@ -46,7 +46,7 @@ export function registerOrderTools(
     async (params) => {
       const data = await client.getOrders(params);
       return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
     }
   );
@@ -67,7 +67,7 @@ export function registerOrderTools(
     async ({ id }) => {
       const data = await client.getOrder(id);
       return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
     }
   );

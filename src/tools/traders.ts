@@ -20,7 +20,7 @@ export function registerTraderTools(
     async () => {
       const data = await client.getTraders();
       return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
     }
   );
@@ -58,7 +58,7 @@ export function registerTraderTools(
     async (params) => {
       const data = await client.followTrader(params);
       return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
     }
   );
@@ -82,7 +82,7 @@ export function registerTraderTools(
     async ({ wallet }) => {
       const data = await client.getTrader(wallet);
       return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
     }
   );
@@ -126,7 +126,7 @@ export function registerTraderTools(
     async ({ wallet, ...body }) => {
       const data = await client.updateTrader(wallet, body);
       return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
     }
   );
@@ -151,7 +151,7 @@ export function registerTraderTools(
     async ({ wallet }) => {
       const data = await client.unfollowTrader(wallet);
       return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
     }
   );
@@ -176,7 +176,7 @@ export function registerTraderTools(
     async ({ wallet }) => {
       const data = await client.pauseTrader(wallet);
       return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
     }
   );
@@ -200,7 +200,7 @@ export function registerTraderTools(
     async ({ wallet }) => {
       const data = await client.resumeTrader(wallet);
       return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
     }
   );
