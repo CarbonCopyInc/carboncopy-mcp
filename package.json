@@ -1,0 +1,33 @@
+{
+  "name": "@carboncopy/mcp",
+  "version": "0.1.0",
+  "description": "An MCP server that gives AI agents programmatic access to Carbon Copy — a Polymarket copy-trading platform.",
+  "type": "module",
+  "bin": {
+    "carboncopy-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepare": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CarbonCopyInc/carboncopy-mcp.git"
+  },
+  "keywords": ["mcp", "carboncopy", "polymarket", "copy-trading"],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CarbonCopyInc/carboncopy-mcp/issues"
+  },
+  "homepage": "https://github.com/CarbonCopyInc/carboncopy-mcp#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0",
+    "@types/node": "^22.0.0"
+  }
+}
