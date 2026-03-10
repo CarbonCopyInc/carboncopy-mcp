@@ -33,15 +33,20 @@ export class CarbonCopyClient {
     });
 
     if (!res.ok) {
+      const cloned = res.clone();
       let errorBody: unknown;
       try {
-        errorBody = await res.json();
+        errorBody = await cloned.json();
       } catch {
         errorBody = await res.text();
       }
       throw new Error(
         `Carbon Copy API error ${res.status} ${res.statusText}: ${JSON.stringify(errorBody)}`
       );
+    }
+
+    if (res.status === 204 || res.headers.get("content-length") === "0") {
+      return undefined as unknown as T;
     }
 
     return res.json() as Promise<T>;
