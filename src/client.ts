@@ -1,4 +1,4 @@
-const BASE_URL = "https://carboncopy.news";
+const BASE_URL = "https://carboncopy.inc";
 
 function buildQuery(params: Record<string, string | number | undefined>): string {
   const qs = Object.entries(params)
