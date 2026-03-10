@@ -53,7 +53,7 @@ function createMockResponse(opts: MockResponseOptions = {}) {
   };
 }
 
-const BASE = "https://carboncopy.news";
+const BASE = "https://carboncopy.inc";
 
 describe("CarbonCopyClient", () => {
   let fetchMock: ReturnType<typeof vi.fn>;
