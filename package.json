@@ -9,13 +9,21 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/CarbonCopyInc/carboncopy-mcp.git"
   },
-  "keywords": ["mcp", "carboncopy", "polymarket", "copy-trading"],
+  "keywords": [
+    "mcp",
+    "carboncopy",
+    "polymarket",
+    "copy-trading"
+  ],
   "author": "",
   "license": "MIT",
   "bugs": {
@@ -27,7 +35,9 @@
     "zod": "^3.25.0"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^4.0.18",
     "typescript": "^5.8.0",
-    "@types/node": "^22.0.0"
+    "vitest": "^4.0.18"
   }
 }
