@@ -4,8 +4,11 @@ An [MCP](https://modelcontextprotocol.io) server that gives AI agents programmat
 
 ## Features
 
-- **Portfolio Management** — View portfolio summary, positions, and trade history
-- **Trader Operations** — Follow/unfollow traders, pause/resume copy trading, adjust settings
+- **Portfolio Management** — View portfolio summary (including live positions value and unrealised P&L), open positions, and trade history
+- **Trader Discovery** — Search and filter traders by profit, ROI, win rate, volume, and followers
+- **Follow Management** — Follow/unfollow traders, pause/resume copy trading, adjust per-trader settings
+- **Batch Operations** — Update up to 100 followed traders in a single call
+- **Performance Analytics** — Trader P&L history, drawdown, and Sharpe ratio
 - **Order Tracking** — List and inspect copy trade orders with filtering
 - **Account Info** — Access account details
 - **Cursor Pagination** — Iterate through large datasets efficiently
@@ -15,7 +18,7 @@ An [MCP](https://modelcontextprotocol.io) server that gives AI agents programmat
 ### Prerequisites
 
 1. A [Carbon Copy](https://carboncopy.inc) account
-2. An API key (generate from the dashboard or via the [API](https://docs.carboncopy.inc))
+2. An API key (generate from the dashboard)
 
 ### Usage with Claude Desktop
 
@@ -55,22 +58,39 @@ Add to `.cursor/mcp.json` in your project:
 
 ## Available Tools
 
+### Portfolio
+
 | Tool | Description |
-|---|---|
-| `get_portfolio` | Portfolio summary (value, P&L, win rate) |
-| `get_portfolio_history` | Paginated trade history with date filtering |
+|------|-------------|
+| `get_portfolio` | Portfolio summary: balance, positions value, unrealised P&L, win rate |
+| `get_portfolio_history` | Paginated trade history with optional date filtering |
 | `get_positions` | Open positions with pagination |
-| `list_traders` | All followed traders with stats |
-| `discover_traders` | Discover/search traders you can follow |
+
+### Trader Discovery
+
+| Tool | Description |
+|------|-------------|
+| `discover_traders` | Search/filter traders by profit, ROI, win rate, volume, followers |
+| `get_trader_performance` | Detailed performance analytics and P&L history for a trader |
+
+### Follow Management
+
+| Tool | Description |
+|------|-------------|
+| `list_traders` | All followed traders with copy settings and stats |
 | `follow_trader` | Start following a trader |
-| `get_trader` | Single trader details |
-| `get_trader_performance` | Trader performance metrics/history |
-| `update_trader` | Update copy trading settings |
-| `batch_update_traders` | Update multiple followed traders in one call |
+| `get_trader` | Details for a single followed trader |
+| `update_trader` | Update copy trading settings for a followed trader |
+| `batch_update_traders` | Update up to 100 followed traders in one call |
 | `unfollow_trader` | Stop following a trader |
-| `pause_trader` | Pause copy trading for a trader |
-| `resume_trader` | Resume copy trading for a trader |
-| `list_orders` | Paginated orders with status/date filters |
+| `pause_trader` | Pause copy trading for a trader (without unfollowing) |
+| `resume_trader` | Resume copy trading for a paused trader |
+
+### Orders & Account
+
+| Tool | Description |
+|------|-------------|
+| `list_orders` | Paginated orders with optional status/date filters |
 | `get_order` | Single order details |
 | `get_account` | Account information |
 | `health` | API health check |
@@ -78,9 +98,9 @@ Add to `.cursor/mcp.json` in your project:
 ## Resources
 
 | URI | Description |
-|---|---|
+|-----|-------------|
 | `carboncopy://portfolio` | Current portfolio snapshot |
-| `carboncopy://traders` | List of followed traders |
+| `carboncopy://traders` | Followed traders list |
 
 ## Development
 
@@ -88,24 +108,25 @@ Add to `.cursor/mcp.json` in your project:
 npm install
 npm run build
 npm run dev           # Watch mode
+npm test              # Run tests
 ```
 
 ## Authentication
 
-All tools use your `CARBONCOPY_API_KEY` (format: `cc_<64 hex chars>`). Generate one from the [Carbon Copy dashboard](https://carboncopy.inc) or via the [Key Management API](https://docs.carboncopy.inc/authentication).
+All tools authenticate via `CARBONCOPY_API_KEY` (format: `cc_<64 hex chars>`). Generate keys from the [Carbon Copy dashboard](https://carboncopy.inc).
 
-You can override the API origin with `CARBONCOPY_BASE_URL` if needed. By default the MCP server targets `https://carboncopy.inc`.
+API keys carry **scoped permissions** (`portfolio`, `traders`, `orders`, `markets`, `account`). Tools return a `403` permission error if your key lacks the required scope.
 
-API keys have scoped permissions (portfolio, traders, orders, markets, account). Tools will return permission errors if your key lacks the required scope.
+You can override the default API origin with `CARBONCOPY_BASE_URL` (defaults to `https://carboncopy.inc`).
 
 ## Rate Limits
 
-The underlying API enforces rate limits (60 reads/min, 20 writes/min). The MCP server surfaces rate limit errors transparently — retry after the indicated delay.
+The API enforces rate limits (60 reads/min, 20 writes/min). The MCP server surfaces rate limit errors transparently — retry after the indicated delay.
 
 ## Links
 
 - [Carbon Copy](https://carboncopy.inc)
-- [API Documentation](https://docs.carboncopy.inc)
+- [API Reference](https://github.com/CarbonCopyInc/habakkuk/blob/main/docs/API_REFERENCE.md)
 - [OpenAPI Spec](https://docs.carboncopy.inc/api-reference/openapi.json)
 
 ## License
