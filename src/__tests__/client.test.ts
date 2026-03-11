@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CarbonCopyClient } from "../client.js";
 
 // ---------------------------------------------------------------------------
@@ -31,9 +31,9 @@ function createMockResponse(opts: MockResponseOptions = {}) {
   if (contentLength !== undefined) headers["content-length"] = contentLength;
 
   const jsonFn = vi.fn().mockResolvedValue(body);
-  const textFn = vi.fn().mockResolvedValue(
-    bodyText || (body !== null ? JSON.stringify(body) : "")
-  );
+  const textFn = vi
+    .fn()
+    .mockResolvedValue(bodyText || (body !== null ? JSON.stringify(body) : ""));
 
   // The clone is only used for error-path json parsing
   const cloneJsonFn = cloneJsonThrows
@@ -53,7 +53,7 @@ function createMockResponse(opts: MockResponseOptions = {}) {
   };
 }
 
-const BASE = "https://carboncopy.news";
+const BASE = "https://www.carboncopy.inc";
 
 describe("CarbonCopyClient", () => {
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -84,10 +84,10 @@ describe("CarbonCopyClient", () => {
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
       expect(url).toBe(`${BASE}/api/v1/portfolio`);
       expect((init.headers as Record<string, string>)["Authorization"]).toBe(
-        "Bearer cc_testkey"
+        "Bearer cc_testkey",
       );
       expect((init.headers as Record<string, string>)["Content-Type"]).toBe(
-        "application/json"
+        "application/json",
       );
       expect(init.method).toBe("GET");
       expect(init.body).toBeUndefined();
@@ -101,14 +101,19 @@ describe("CarbonCopyClient", () => {
       fetchMock.mockResolvedValue(createMockResponse({ body: responseData }));
 
       const payload = {
-        walletAddress: "0xabc",
+        wallet: "0xabc",
         copyPercentage: 50,
       };
       await client.followTrader(payload);
 
       const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
       expect(init.method).toBe("POST");
-      expect(init.body).toBe(JSON.stringify(payload));
+      expect(init.body).toBe(
+        JSON.stringify({
+          walletAddress: payload.wallet,
+          copyPercentage: payload.copyPercentage,
+        }),
+      );
     });
   });
 
@@ -121,15 +126,13 @@ describe("CarbonCopyClient", () => {
           status: 401,
           statusText: "Unauthorized",
           body: errBody,
-        })
+        }),
       );
 
       await expect(client.getPortfolio()).rejects.toThrow(
-        /Carbon Copy API error 401 Unauthorized/
+        /Carbon Copy API error 401 Unauthorized/,
       );
-      await expect(client.getPortfolio()).rejects.toThrow(
-        /Unauthorized/
-      );
+      await expect(client.getPortfolio()).rejects.toThrow(/Unauthorized/);
     });
 
     it("falls back to res.text() when cloned.json() fails on error response", async () => {
@@ -140,12 +143,10 @@ describe("CarbonCopyClient", () => {
           statusText: "Internal Server Error",
           bodyText: "raw error text",
           cloneJsonThrows: true,
-        })
+        }),
       );
 
-      await expect(client.getPortfolio()).rejects.toThrow(
-        /raw error text/
-      );
+      await expect(client.getPortfolio()).rejects.toThrow(/raw error text/);
     });
   });
 
@@ -224,9 +225,7 @@ describe("CarbonCopyClient", () => {
     it("getPortfolioHistory({limit:10, cursor:'abc'}) → GET /api/v1/portfolio/history?limit=10&cursor=abc", async () => {
       await client.getPortfolioHistory({ limit: 10, cursor: "abc" });
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toBe(
-        `${BASE}/api/v1/portfolio/history?limit=10&cursor=abc`
-      );
+      expect(url).toBe(`${BASE}/api/v1/portfolio/history?limit=10&cursor=abc`);
       expect(init.method).toBe("GET");
     });
 
@@ -237,63 +236,93 @@ describe("CarbonCopyClient", () => {
       expect(init.method).toBe("GET");
     });
 
-    it("getTraders() → GET /api/v1/traders", async () => {
+    it("getTraders() → GET /api/v1/portfolio/traders", async () => {
       await client.getTraders();
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toBe(`${BASE}/api/v1/traders`);
+      expect(url).toBe(`${BASE}/api/v1/portfolio/traders`);
       expect(init.method).toBe("GET");
     });
 
-    it("followTrader({...}) → POST /api/v1/traders with body", async () => {
+    it("discoverTraders({sortBy:'roi'}) → GET /api/v1/traders?sortBy=roi", async () => {
+      await client.discoverTraders({ sortBy: "roi" });
+      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(`${BASE}/api/v1/traders?sortBy=roi`);
+      expect(init.method).toBe("GET");
+    });
+
+    it("followTrader({...}) → POST /api/v1/portfolio/traders with body", async () => {
       const body = {
-        walletAddress: "0xabc",
+        wallet: "0xabc",
         copyPercentage: 50,
         maxCopyAmount: 100,
         notificationsEnabled: true,
       };
       await client.followTrader(body);
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toBe(`${BASE}/api/v1/traders`);
+      expect(url).toBe(`${BASE}/api/v1/portfolio/traders`);
       expect(init.method).toBe("POST");
-      expect(JSON.parse(init.body as string)).toEqual(body);
+      expect(JSON.parse(init.body as string)).toEqual({
+        walletAddress: body.wallet,
+        copyPercentage: body.copyPercentage,
+        maxCopyAmount: body.maxCopyAmount,
+        notificationsEnabled: body.notificationsEnabled,
+      });
     });
 
-    it("getTrader('0xabc') → GET /api/v1/traders/0xabc", async () => {
+    it("getTrader('0xabc') → GET /api/v1/portfolio/traders/0xabc", async () => {
       await client.getTrader("0xabc");
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toBe(`${BASE}/api/v1/traders/0xabc`);
+      expect(url).toBe(`${BASE}/api/v1/portfolio/traders/0xabc`);
       expect(init.method).toBe("GET");
     });
 
-    it("updateTrader('0xabc', {...}) → PATCH /api/v1/traders/0xabc with body", async () => {
+    it("updateTrader('0xabc', {...}) → PATCH /api/v1/portfolio/traders/0xabc with body", async () => {
       const body = { copyPercentage: 75, copyTradingEnabled: false };
       await client.updateTrader("0xabc", body);
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toBe(`${BASE}/api/v1/traders/0xabc`);
+      expect(url).toBe(`${BASE}/api/v1/portfolio/traders/0xabc`);
       expect(init.method).toBe("PATCH");
       expect(JSON.parse(init.body as string)).toEqual(body);
     });
 
-    it("unfollowTrader('0xabc') → DELETE /api/v1/traders/0xabc", async () => {
-      fetchMock.mockResolvedValue(createMockResponse({ status: 204, ok: true }));
+    it("unfollowTrader('0xabc') → DELETE /api/v1/portfolio/traders/0xabc", async () => {
+      fetchMock.mockResolvedValue(
+        createMockResponse({ status: 204, ok: true }),
+      );
       await client.unfollowTrader("0xabc");
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toBe(`${BASE}/api/v1/traders/0xabc`);
+      expect(url).toBe(`${BASE}/api/v1/portfolio/traders/0xabc`);
       expect(init.method).toBe("DELETE");
     });
 
-    it("pauseTrader('0xabc') → POST /api/v1/traders/0xabc/pause", async () => {
+    it("pauseTrader('0xabc') → POST /api/v1/portfolio/traders/0xabc/pause", async () => {
       await client.pauseTrader("0xabc");
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toBe(`${BASE}/api/v1/traders/0xabc/pause`);
+      expect(url).toBe(`${BASE}/api/v1/portfolio/traders/0xabc/pause`);
       expect(init.method).toBe("POST");
     });
 
-    it("resumeTrader('0xabc') → POST /api/v1/traders/0xabc/resume", async () => {
+    it("resumeTrader('0xabc') → POST /api/v1/portfolio/traders/0xabc/resume", async () => {
       await client.resumeTrader("0xabc");
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toBe(`${BASE}/api/v1/traders/0xabc/resume`);
+      expect(url).toBe(`${BASE}/api/v1/portfolio/traders/0xabc/resume`);
       expect(init.method).toBe("POST");
+    });
+
+    it("getTraderPerformance('0xabc') → GET /api/v1/traders/0xabc/performance", async () => {
+      await client.getTraderPerformance("0xabc");
+      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(`${BASE}/api/v1/traders/0xabc/performance`);
+      expect(init.method).toBe("GET");
+    });
+
+    it("batchUpdateTraders([...]) → PATCH /api/v1/portfolio/traders/batch", async () => {
+      const updates = [{ walletAddress: "0xabc", copyPercentage: 70 }];
+      await client.batchUpdateTraders(updates);
+      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(`${BASE}/api/v1/portfolio/traders/batch`);
+      expect(init.method).toBe("PATCH");
+      expect(JSON.parse(init.body as string)).toEqual({ updates });
     });
 
     it("getOrders({status:'filled'}) → GET /api/v1/orders?status=filled", async () => {
@@ -354,15 +383,21 @@ describe("CarbonCopyClient", () => {
       await client.updateTrader(wallet, { copyPercentage: 10 });
       const [url] = fetchMock.mock.calls[0] as [string];
       expect(url).toContain(encodeURIComponent(wallet));
-      expect(url).toBe(`${BASE}/api/v1/traders/${encodeURIComponent(wallet)}`);
+      expect(url).toBe(
+        `${BASE}/api/v1/portfolio/traders/${encodeURIComponent(wallet)}`,
+      );
     });
 
     it("encodes wallet addresses for unfollowTrader", async () => {
       const wallet = "0xabc def";
-      fetchMock.mockResolvedValue(createMockResponse({ status: 204, ok: true }));
+      fetchMock.mockResolvedValue(
+        createMockResponse({ status: 204, ok: true }),
+      );
       await client.unfollowTrader(wallet);
       const [url] = fetchMock.mock.calls[0] as [string];
-      expect(url).toBe(`${BASE}/api/v1/traders/${encodeURIComponent(wallet)}`);
+      expect(url).toBe(
+        `${BASE}/api/v1/portfolio/traders/${encodeURIComponent(wallet)}`,
+      );
     });
 
     it("encodes wallet addresses for pauseTrader", async () => {
@@ -370,7 +405,7 @@ describe("CarbonCopyClient", () => {
       await client.pauseTrader(wallet);
       const [url] = fetchMock.mock.calls[0] as [string];
       expect(url).toBe(
-        `${BASE}/api/v1/traders/${encodeURIComponent(wallet)}/pause`
+        `${BASE}/api/v1/portfolio/traders/${encodeURIComponent(wallet)}/pause`,
       );
     });
 
@@ -379,7 +414,7 @@ describe("CarbonCopyClient", () => {
       await client.resumeTrader(wallet);
       const [url] = fetchMock.mock.calls[0] as [string];
       expect(url).toBe(
-        `${BASE}/api/v1/traders/${encodeURIComponent(wallet)}/resume`
+        `${BASE}/api/v1/portfolio/traders/${encodeURIComponent(wallet)}/resume`,
       );
     });
 

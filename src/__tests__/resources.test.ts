@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CarbonCopyClient } from "../client.js";
 import { registerPortfolioResources } from "../resources/portfolio.js";
 import { registerTraderResources } from "../resources/traders.js";
@@ -137,7 +137,7 @@ describe("Resource Registration", () => {
       const resource = getResources(server)["carboncopy://portfolio"];
       const result = (await resource.readCallback(
         new URL("carboncopy://portfolio"),
-        {}
+        {},
       )) as { contents: { uri: string; mimeType: string; text: string }[] };
 
       expect(result.contents[0].mimeType).toBe("application/json");
@@ -150,7 +150,7 @@ describe("Resource Registration", () => {
       const resource = getResources(server)["carboncopy://portfolio"];
       const result = (await resource.readCallback(
         new URL("carboncopy://portfolio"),
-        {}
+        {},
       )) as { contents: { uri: string; mimeType: string; text: string }[] };
 
       expect(JSON.parse(result.contents[0].text)).toEqual(portfolioData);
@@ -180,7 +180,7 @@ describe("Resource Registration", () => {
 
       const resource = getResources(server)["carboncopy://portfolio"];
       await expect(
-        resource.readCallback(new URL("carboncopy://portfolio"), {})
+        resource.readCallback(new URL("carboncopy://portfolio"), {}),
       ).rejects.toThrow(/Carbon Copy API error 401/);
     });
   });
@@ -197,7 +197,7 @@ describe("Resource Registration", () => {
       const resource = getResources(server)["carboncopy://traders"];
       const result = (await resource.readCallback(
         new URL("carboncopy://traders"),
-        {}
+        {},
       )) as { contents: { uri: string; mimeType: string; text: string }[] };
 
       expect(result.contents).toHaveLength(1);
@@ -210,7 +210,7 @@ describe("Resource Registration", () => {
       const resource = getResources(server)["carboncopy://traders"];
       const result = (await resource.readCallback(
         new URL("carboncopy://traders"),
-        {}
+        {},
       )) as { contents: { uri: string; mimeType: string; text: string }[] };
 
       expect(result.contents[0].mimeType).toBe("application/json");
@@ -226,20 +226,20 @@ describe("Resource Registration", () => {
       const resource = getResources(server)["carboncopy://traders"];
       const result = (await resource.readCallback(
         new URL("carboncopy://traders"),
-        {}
+        {},
       )) as { contents: { uri: string; mimeType: string; text: string }[] };
 
       expect(JSON.parse(result.contents[0].text)).toEqual(tradersData);
     });
 
-    it("calls GET /api/v1/traders when traders resource is read", async () => {
+    it("calls GET /api/v1/portfolio/traders when traders resource is read", async () => {
       fetchMock.mockResolvedValue(createMockFetchResponse([]));
 
       const resource = getResources(server)["carboncopy://traders"];
       await resource.readCallback(new URL("carboncopy://traders"), {});
 
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toContain("/api/v1/traders");
+      expect(url).toContain("/api/v1/portfolio/traders");
       expect(init.method).toBe("GET");
     });
 
@@ -256,7 +256,7 @@ describe("Resource Registration", () => {
 
       const resource = getResources(server)["carboncopy://traders"];
       await expect(
-        resource.readCallback(new URL("carboncopy://traders"), {})
+        resource.readCallback(new URL("carboncopy://traders"), {}),
       ).rejects.toThrow(/Carbon Copy API error 403/);
     });
   });

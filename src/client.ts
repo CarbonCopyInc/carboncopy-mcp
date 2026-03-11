@@ -1,9 +1,14 @@
-const BASE_URL = "https://carboncopy.news";
+const BASE_URL =
+  process.env.CARBONCOPY_BASE_URL?.trim() || "https://www.carboncopy.inc";
 
-function buildQuery(params: Record<string, string | number | undefined>): string {
+function buildQuery(
+  params: Record<string, string | number | undefined>,
+): string {
   const qs = Object.entries(params)
     .filter(([, v]) => v !== undefined)
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+    .map(
+      ([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`,
+    )
     .join("&");
   return qs ? `?${qs}` : "";
 }
@@ -18,7 +23,7 @@ export class CarbonCopyClient {
   private async request<T>(
     method: string,
     path: string,
-    body?: unknown
+    body?: unknown,
   ): Promise<T> {
     const url = `${BASE_URL}${path}`;
     const headers: Record<string, string> = {
@@ -41,7 +46,7 @@ export class CarbonCopyClient {
         errorBody = await res.text();
       }
       throw new Error(
-        `Carbon Copy API error ${res.status} ${res.statusText}: ${JSON.stringify(errorBody)}`
+        `Carbon Copy API error ${res.status} ${res.statusText}: ${JSON.stringify(errorBody)}`,
       );
     }
 
@@ -81,20 +86,46 @@ export class CarbonCopyClient {
 
   // Traders
   getTraders(): Promise<unknown> {
-    return this.request("GET", "/api/v1/traders");
+    return this.request("GET", "/api/v1/portfolio/traders");
+  }
+
+  discoverTraders(params?: {
+    q?: string;
+    sortBy?: string;
+    minVolume?: number;
+    minRoi?: number;
+    minWinRate?: number;
+    limit?: number;
+  }): Promise<unknown> {
+    const qs = buildQuery(params ?? {});
+    return this.request("GET", `/api/v1/traders${qs}`);
   }
 
   followTrader(body: {
-    walletAddress: string;
+    wallet: string;
     copyPercentage: number;
     maxCopyAmount?: number;
     notificationsEnabled?: boolean;
   }): Promise<unknown> {
-    return this.request("POST", "/api/v1/traders", body);
+    const { wallet, ...rest } = body;
+    return this.request("POST", "/api/v1/portfolio/traders", {
+      walletAddress: wallet,
+      ...rest,
+    });
   }
 
   getTrader(wallet: string): Promise<unknown> {
-    return this.request("GET", `/api/v1/traders/${encodeURIComponent(wallet)}`);
+    return this.request(
+      "GET",
+      `/api/v1/portfolio/traders/${encodeURIComponent(wallet)}`,
+    );
+  }
+
+  getTraderPerformance(wallet: string): Promise<unknown> {
+    return this.request(
+      "GET",
+      `/api/v1/traders/${encodeURIComponent(wallet)}/performance`,
+    );
   }
 
   updateTrader(
@@ -104,33 +135,47 @@ export class CarbonCopyClient {
       maxCopyAmount?: number;
       notificationsEnabled?: boolean;
       copyTradingEnabled?: boolean;
-    }
+    },
   ): Promise<unknown> {
     return this.request(
       "PATCH",
-      `/api/v1/traders/${encodeURIComponent(wallet)}`,
-      body
+      `/api/v1/portfolio/traders/${encodeURIComponent(wallet)}`,
+      body,
     );
+  }
+
+  batchUpdateTraders(
+    updates: Array<{
+      walletAddress: string;
+      copyPercentage?: number;
+      maxCopyAmount?: number;
+      notificationsEnabled?: boolean;
+      copyTradingEnabled?: boolean;
+    }>,
+  ): Promise<unknown> {
+    return this.request("PATCH", "/api/v1/portfolio/traders/batch", {
+      updates,
+    });
   }
 
   unfollowTrader(wallet: string): Promise<unknown> {
     return this.request(
       "DELETE",
-      `/api/v1/traders/${encodeURIComponent(wallet)}`
+      `/api/v1/portfolio/traders/${encodeURIComponent(wallet)}`,
     );
   }
 
   pauseTrader(wallet: string): Promise<unknown> {
     return this.request(
       "POST",
-      `/api/v1/traders/${encodeURIComponent(wallet)}/pause`
+      `/api/v1/portfolio/traders/${encodeURIComponent(wallet)}/pause`,
     );
   }
 
   resumeTrader(wallet: string): Promise<unknown> {
     return this.request(
       "POST",
-      `/api/v1/traders/${encodeURIComponent(wallet)}/resume`
+      `/api/v1/portfolio/traders/${encodeURIComponent(wallet)}/resume`,
     );
   }
 
