@@ -1,6 +1,6 @@
 # Carbon Copy MCP Server
 
-An [MCP](https://modelcontextprotocol.io) server that gives AI agents programmatic access to [Carbon Copy](https://carboncopy.news) — a Polymarket copy-trading platform.
+An [MCP](https://modelcontextprotocol.io) server that gives AI agents programmatic access to [Carbon Copy](https://carboncopy.inc) — a Polymarket copy-trading platform.
 
 ## Features
 
@@ -14,8 +14,8 @@ An [MCP](https://modelcontextprotocol.io) server that gives AI agents programmat
 
 ### Prerequisites
 
-1. A [Carbon Copy](https://carboncopy.news) account
-2. An API key (generate from the dashboard or via the [API](https://docs.carboncopy.news))
+1. A [Carbon Copy](https://carboncopy.inc) account
+2. An API key (generate from the dashboard or via the [API](https://docs.carboncopy.inc))
 
 ### Usage with Claude Desktop
 
@@ -92,9 +92,9 @@ npm run dev           # Watch mode
 
 ## Authentication
 
-All tools use your `CARBONCOPY_API_KEY` (format: `cc_<64 hex chars>`). Generate one from the [Carbon Copy dashboard](https://carboncopy.news) or via the [Key Management API](https://docs.carboncopy.news/authentication).
+All tools use your `CARBONCOPY_API_KEY` (format: `cc_<64 hex chars>`). Generate one from the [Carbon Copy dashboard](https://carboncopy.inc) or via the [Key Management API](https://docs.carboncopy.inc/authentication).
 
-You can override the API origin with `CARBONCOPY_BASE_URL` if needed. By default the MCP server targets `https://www.carboncopy.inc`.
+You can override the API origin with `CARBONCOPY_BASE_URL` if needed. By default the MCP server targets `https://carboncopy.inc`.
 
 API keys have scoped permissions (portfolio, traders, orders, markets, account). Tools will return permission errors if your key lacks the required scope.
 
@@ -104,9 +104,9 @@ The underlying API enforces rate limits (60 reads/min, 20 writes/min). The MCP s
 
 ## Links
 
-- [Carbon Copy](https://carboncopy.news)
-- [API Documentation](https://docs.carboncopy.news)
-- [OpenAPI Spec](https://docs.carboncopy.news/api-reference/openapi.json)
+- [Carbon Copy](https://carboncopy.inc)
+- [API Documentation](https://docs.carboncopy.inc)
+- [OpenAPI Spec](https://docs.carboncopy.inc/api-reference/openapi.json)
 
 ## License
 

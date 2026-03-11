@@ -1,5 +1,5 @@
 const BASE_URL =
-  process.env.CARBONCOPY_BASE_URL?.trim() || "https://www.carboncopy.inc";
+  process.env.CARBONCOPY_BASE_URL?.trim() || "https://carboncopy.inc";
 
 function buildQuery(
   params: Record<string, string | number | undefined>,
