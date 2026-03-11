@@ -333,7 +333,9 @@ export function registerTraderTools(
         updates: z
           .array(
             z.object({
-              walletAddress: z.string(),
+              wallet: z
+                .string()
+                .describe("The Polymarket wallet address of the trader."),
               copyPercentage: z.number().min(0).max(100).optional(),
               maxCopyAmount: z.number().positive().optional(),
               notificationsEnabled: z.boolean().optional(),
@@ -349,7 +351,11 @@ export function registerTraderTools(
       },
     },
     async ({ updates }) => {
-      const data = await client.batchUpdateTraders(updates);
+      const mapped = updates.map(({ wallet, ...rest }) => ({
+        walletAddress: wallet,
+        ...rest,
+      }));
+      const data = await client.batchUpdateTraders(mapped);
       return {
         content: [
           {

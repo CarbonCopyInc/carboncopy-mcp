@@ -285,7 +285,7 @@ describe("Tool Registration", () => {
 
       expect(JSON.parse(result.content[0].text)).toEqual(responseData);
       const [url] = fetchMock.mock.calls[0] as [string];
-      expect(url).toContain("/api/v1/traders");
+      expect(url).toMatch(/\/api\/v1\/traders(?:\?|$)/);
       expect(url).toContain("sortBy=roi");
     });
 
@@ -360,8 +360,8 @@ describe("Tool Registration", () => {
 
       const tool = getTools(server)["batch_update_traders"];
       const updates = [
-        { walletAddress: "0xabc", copyPercentage: 75 },
-        { walletAddress: "0xdef", copyPercentage: 50 },
+        { wallet: "0xabc", copyPercentage: 75 },
+        { wallet: "0xdef", copyPercentage: 50 },
       ];
       const result = (await tool.handler({ updates }, {})) as {
         content: { type: string; text: string }[];
@@ -371,7 +371,12 @@ describe("Tool Registration", () => {
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
       expect(url).toContain("/api/v1/portfolio/traders/batch");
       expect(init.method).toBe("PATCH");
-      expect(JSON.parse(init.body as string)).toEqual({ updates });
+      expect(JSON.parse(init.body as string)).toEqual({
+        updates: [
+          { walletAddress: "0xabc", copyPercentage: 75 },
+          { walletAddress: "0xdef", copyPercentage: 50 },
+        ],
+      });
     });
 
     it("unfollow_trader — deletes trader and returns JSON text (null body)", async () => {
