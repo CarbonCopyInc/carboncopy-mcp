@@ -61,9 +61,12 @@ Add to `.cursor/mcp.json` in your project:
 | `get_portfolio_history` | Paginated trade history with date filtering |
 | `get_positions` | Open positions with pagination |
 | `list_traders` | All followed traders with stats |
+| `discover_traders` | Discover/search traders you can follow |
 | `follow_trader` | Start following a trader |
 | `get_trader` | Single trader details |
+| `get_trader_performance` | Trader performance metrics/history |
 | `update_trader` | Update copy trading settings |
+| `batch_update_traders` | Update multiple followed traders in one call |
 | `unfollow_trader` | Stop following a trader |
 | `pause_trader` | Pause copy trading for a trader |
 | `resume_trader` | Resume copy trading for a trader |
@@ -90,6 +93,8 @@ npm run dev           # Watch mode
 ## Authentication
 
 All tools use your `CARBONCOPY_API_KEY` (format: `cc_<64 hex chars>`). Generate one from the [Carbon Copy dashboard](https://carboncopy.inc) or via the [Key Management API](https://docs.carboncopy.inc/authentication).
+
+You can override the API origin with `CARBONCOPY_BASE_URL` if needed. By default the MCP server targets `https://carboncopy.inc`.
 
 API keys have scoped permissions (portfolio, traders, orders, markets, account). Tools will return permission errors if your key lacks the required scope.
 

@@ -1,10 +1,10 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { CarbonCopyClient } from "../client.js";
+import type { CarbonCopyClient } from "../client.js";
 
 export function registerOrderTools(
   server: McpServer,
-  client: CarbonCopyClient
+  client: CarbonCopyClient,
 ): void {
   server.registerTool(
     "list_orders",
@@ -17,7 +17,7 @@ export function registerOrderTools(
           .string()
           .optional()
           .describe(
-            "Filter by order status (e.g. 'pending', 'filled', 'cancelled')."
+            "Filter by order status (e.g. 'pending', 'filled', 'executed', 'cancelled').",
           ),
         limit: z
           .number()
@@ -32,11 +32,15 @@ export function registerOrderTools(
         since: z
           .string()
           .optional()
-          .describe("ISO 8601 timestamp — only return records after this time."),
+          .describe(
+            "ISO 8601 timestamp — only return records after this time.",
+          ),
         until: z
           .string()
           .optional()
-          .describe("ISO 8601 timestamp — only return records before this time."),
+          .describe(
+            "ISO 8601 timestamp — only return records before this time.",
+          ),
       }),
       annotations: {
         readOnlyHint: true,
@@ -46,9 +50,14 @@ export function registerOrderTools(
     async (params) => {
       const data = await client.getOrders(params);
       return {
-        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(data ?? { success: true }, null, 2),
+          },
+        ],
       };
-    }
+    },
   );
 
   server.registerTool(
@@ -67,8 +76,13 @@ export function registerOrderTools(
     async ({ id }) => {
       const data = await client.getOrder(id);
       return {
-        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(data ?? { success: true }, null, 2),
+          },
+        ],
       };
-    }
+    },
   );
 }

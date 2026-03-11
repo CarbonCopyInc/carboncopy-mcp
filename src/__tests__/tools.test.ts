@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CarbonCopyClient } from "../client.js";
+import { registerAccountTools } from "../tools/account.js";
+import { registerOrderTools } from "../tools/orders.js";
 import { registerPortfolioTools } from "../tools/portfolio.js";
 import { registerTraderTools } from "../tools/traders.js";
-import { registerOrderTools } from "../tools/orders.js";
-import { registerAccountTools } from "../tools/account.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -49,9 +49,12 @@ const ALL_TOOL_NAMES = [
   "get_portfolio_history",
   "get_positions",
   "list_traders",
+  "discover_traders",
   "follow_trader",
   "get_trader",
+  "get_trader_performance",
   "update_trader",
+  "batch_update_traders",
   "unfollow_trader",
   "pause_trader",
   "resume_trader",
@@ -87,9 +90,9 @@ describe("Tool Registration", () => {
   // Count & names
   // -------------------------------------------------------------------------
 
-  it("registers exactly 14 tools", () => {
+  it("registers exactly 17 tools", () => {
     const tools = getTools(server);
-    expect(Object.keys(tools)).toHaveLength(14);
+    expect(Object.keys(tools)).toHaveLength(17);
   });
 
   it("registers all expected tool names", () => {
@@ -133,6 +136,11 @@ describe("Tool Registration", () => {
       expect(annotations?.readOnlyHint).toBe(true);
     });
 
+    it("discover_traders — readOnlyHint:true", () => {
+      const { annotations } = getTools(server)["discover_traders"];
+      expect(annotations?.readOnlyHint).toBe(true);
+    });
+
     it("follow_trader — readOnlyHint:false, no destructiveHint", () => {
       const { annotations } = getTools(server)["follow_trader"];
       expect(annotations?.readOnlyHint).toBe(false);
@@ -144,8 +152,19 @@ describe("Tool Registration", () => {
       expect(annotations?.readOnlyHint).toBe(true);
     });
 
+    it("get_trader_performance — readOnlyHint:true", () => {
+      const { annotations } = getTools(server)["get_trader_performance"];
+      expect(annotations?.readOnlyHint).toBe(true);
+    });
+
     it("update_trader — readOnlyHint:false, idempotentHint:true", () => {
       const { annotations } = getTools(server)["update_trader"];
+      expect(annotations?.readOnlyHint).toBe(false);
+      expect(annotations?.idempotentHint).toBe(true);
+    });
+
+    it("batch_update_traders — readOnlyHint:false, idempotentHint:true", () => {
+      const { annotations } = getTools(server)["batch_update_traders"];
       expect(annotations?.readOnlyHint).toBe(false);
       expect(annotations?.idempotentHint).toBe(true);
     });
@@ -252,7 +271,22 @@ describe("Tool Registration", () => {
 
       expect(JSON.parse(result.content[0].text)).toEqual(responseData);
       const [url] = fetchMock.mock.calls[0] as [string];
-      expect(url).toContain("/api/v1/traders");
+      expect(url).toContain("/api/v1/portfolio/traders");
+    });
+
+    it("discover_traders — calls discoverTraders() and returns JSON text", async () => {
+      const responseData = [{ walletAddress: "0xabc", roi: 12.5 }];
+      fetchMock.mockResolvedValue(createMockFetchResponse(responseData));
+
+      const tool = getTools(server)["discover_traders"];
+      const result = (await tool.handler({ sortBy: "roi" }, {})) as {
+        content: { type: string; text: string }[];
+      };
+
+      expect(JSON.parse(result.content[0].text)).toEqual(responseData);
+      const [url] = fetchMock.mock.calls[0] as [string];
+      expect(url).toMatch(/\/api\/v1\/traders(?:\?|$)/);
+      expect(url).toContain("sortBy=roi");
     });
 
     it("follow_trader — posts follow request and returns JSON text", async () => {
@@ -260,16 +294,19 @@ describe("Tool Registration", () => {
       fetchMock.mockResolvedValue(createMockFetchResponse(responseData));
 
       const tool = getTools(server)["follow_trader"];
-      const args = { walletAddress: "0xabc", copyPercentage: 50 };
+      const args = { wallet: "0xabc", copyPercentage: 50 };
       const result = (await tool.handler(args, {})) as {
         content: { type: string; text: string }[];
       };
 
       expect(JSON.parse(result.content[0].text)).toEqual(responseData);
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toContain("/api/v1/traders");
+      expect(url).toContain("/api/v1/portfolio/traders");
       expect(init.method).toBe("POST");
-      expect(JSON.parse(init.body as string)).toMatchObject(args);
+      expect(JSON.parse(init.body as string)).toMatchObject({
+        walletAddress: args.wallet,
+        copyPercentage: args.copyPercentage,
+      });
     });
 
     it("get_trader — calls getTrader(wallet) and returns JSON text", async () => {
@@ -283,7 +320,21 @@ describe("Tool Registration", () => {
 
       expect(JSON.parse(result.content[0].text)).toEqual(responseData);
       const [url] = fetchMock.mock.calls[0] as [string];
-      expect(url).toContain("/api/v1/traders/0xabc");
+      expect(url).toContain("/api/v1/portfolio/traders/0xabc");
+    });
+
+    it("get_trader_performance — calls performance endpoint and returns JSON text", async () => {
+      const responseData = { walletAddress: "0xabc", sharpe: 1.2 };
+      fetchMock.mockResolvedValue(createMockFetchResponse(responseData));
+
+      const tool = getTools(server)["get_trader_performance"];
+      const result = (await tool.handler({ wallet: "0xabc" }, {})) as {
+        content: { type: string; text: string }[];
+      };
+
+      expect(JSON.parse(result.content[0].text)).toEqual(responseData);
+      const [url] = fetchMock.mock.calls[0] as [string];
+      expect(url).toContain("/api/v1/traders/0xabc/performance");
     });
 
     it("update_trader — patches trader settings and returns JSON text", async () => {
@@ -293,14 +344,39 @@ describe("Tool Registration", () => {
       const tool = getTools(server)["update_trader"];
       const result = (await tool.handler(
         { wallet: "0xabc", copyPercentage: 75 },
-        {}
+        {},
       )) as { content: { type: string; text: string }[] };
 
       expect(JSON.parse(result.content[0].text)).toEqual(responseData);
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toContain("/api/v1/traders/0xabc");
+      expect(url).toContain("/api/v1/portfolio/traders/0xabc");
       expect(init.method).toBe("PATCH");
       expect(JSON.parse(init.body as string)).toEqual({ copyPercentage: 75 });
+    });
+
+    it("batch_update_traders — patches multiple traders", async () => {
+      const responseData = { updated: 2, notFound: 0, total: 2 };
+      fetchMock.mockResolvedValue(createMockFetchResponse(responseData));
+
+      const tool = getTools(server)["batch_update_traders"];
+      const updates = [
+        { wallet: "0xabc", copyPercentage: 75 },
+        { wallet: "0xdef", copyPercentage: 50 },
+      ];
+      const result = (await tool.handler({ updates }, {})) as {
+        content: { type: string; text: string }[];
+      };
+
+      expect(JSON.parse(result.content[0].text)).toEqual(responseData);
+      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toContain("/api/v1/portfolio/traders/batch");
+      expect(init.method).toBe("PATCH");
+      expect(JSON.parse(init.body as string)).toEqual({
+        updates: [
+          { walletAddress: "0xabc", copyPercentage: 75 },
+          { walletAddress: "0xdef", copyPercentage: 50 },
+        ],
+      });
     });
 
     it("unfollow_trader — deletes trader and returns JSON text (null body)", async () => {
@@ -322,7 +398,7 @@ describe("Tool Registration", () => {
       expect(result.content[0].type).toBe("text");
       expect(JSON.parse(result.content[0].text)).toEqual({ success: true });
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toContain("/api/v1/traders/0xabc");
+      expect(url).toContain("/api/v1/portfolio/traders/0xabc");
       expect(init.method).toBe("DELETE");
     });
 
@@ -337,7 +413,7 @@ describe("Tool Registration", () => {
 
       expect(JSON.parse(result.content[0].text)).toEqual(responseData);
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toContain("/api/v1/traders/0xabc/pause");
+      expect(url).toContain("/api/v1/portfolio/traders/0xabc/pause");
       expect(init.method).toBe("POST");
     });
 
@@ -352,7 +428,7 @@ describe("Tool Registration", () => {
 
       expect(JSON.parse(result.content[0].text)).toEqual(responseData);
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toContain("/api/v1/traders/0xabc/resume");
+      expect(url).toContain("/api/v1/portfolio/traders/0xabc/resume");
       expect(init.method).toBe("POST");
     });
 
@@ -433,7 +509,7 @@ describe("Tool Registration", () => {
 
       const tool = getTools(server)["get_portfolio"];
       await expect(tool.handler({}, {})).rejects.toThrow(
-        /Carbon Copy API error 403/
+        /Carbon Copy API error 403/,
       );
     });
   });
