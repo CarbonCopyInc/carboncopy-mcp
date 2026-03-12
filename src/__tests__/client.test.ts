@@ -418,6 +418,19 @@ describe("CarbonCopyClient", () => {
       );
     });
 
+    it("getPnlHistory({days:7, interval:'1d'}) → sends ?days=7&interval=1d", async () => {
+      await client.getPnlHistory({ days: 7, interval: "1d" });
+      const [url] = fetchMock.mock.calls[0] as [string];
+      expect(url).toBe(`${BASE}/api/v1/portfolio/pnl-history?days=7&interval=1d`);
+    });
+
+    it("getPnlHistory({days:7}) → sends ?days=7 without interval", async () => {
+      await client.getPnlHistory({ days: 7 });
+      const [url] = fetchMock.mock.calls[0] as [string];
+      expect(url).toBe(`${BASE}/api/v1/portfolio/pnl-history?days=7`);
+      expect(url).not.toContain("interval");
+    });
+
     it("encodes query string values correctly", async () => {
       await client.getPortfolioHistory({ cursor: "abc=def&ghi" });
       const [url] = fetchMock.mock.calls[0] as [string];

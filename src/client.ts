@@ -84,7 +84,7 @@ export class CarbonCopyClient {
     return this.request("GET", `/api/v1/portfolio/positions${qs}`);
   }
 
-  getPnlHistory(params?: { days?: number }): Promise<unknown> {
+  getPnlHistory(params?: { days?: number; interval?: string }): Promise<unknown> {
     const qs = buildQuery(params ?? {});
     return this.request("GET", `/api/v1/portfolio/pnl-history${qs}`);
   }

@@ -48,6 +48,9 @@ const ALL_TOOL_NAMES = [
   "get_portfolio",
   "get_portfolio_history",
   "get_positions",
+  "get_pnl_history",
+  "close_position",
+  "get_pnl_by_trader",
   "list_traders",
   "discover_traders",
   "follow_trader",
@@ -425,6 +428,29 @@ describe("Tool Registration", () => {
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
       expect(url).toContain("/api/v1/portfolio/traders/0xabc/resume");
       expect(init.method).toBe("POST");
+    });
+
+    it("get_pnl_history — defaults interval to '1d' when not provided", async () => {
+      const responseData = { items: [] };
+      fetchMock.mockResolvedValue(createMockFetchResponse(responseData));
+
+      const tool = getTools(server)["get_pnl_history"];
+      await tool.handler({ days: 7 }, {});
+
+      const [url] = fetchMock.mock.calls[0] as [string];
+      expect(url).toContain("interval=1d");
+      expect(url).toContain("days=7");
+    });
+
+    it("get_pnl_history — passes explicit interval through", async () => {
+      const responseData = { items: [] };
+      fetchMock.mockResolvedValue(createMockFetchResponse(responseData));
+
+      const tool = getTools(server)["get_pnl_history"];
+      await tool.handler({ days: 7, interval: "4h" }, {});
+
+      const [url] = fetchMock.mock.calls[0] as [string];
+      expect(url).toContain("interval=4h");
     });
 
     it("list_orders — calls getOrders() with params and returns JSON text", async () => {

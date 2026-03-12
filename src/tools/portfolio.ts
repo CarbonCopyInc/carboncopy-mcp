@@ -117,6 +117,10 @@ export function registerPortfolioTools(
           .positive()
           .optional()
           .describe("Number of days of history to return (default 30, max 90)."),
+        interval: z
+          .enum(["1h", "4h", "1d"])
+          .default("1d")
+          .describe("Aggregation interval for snapshots (default '1d'). Use '1h' or '4h' for more granularity."),
       }),
       annotations: {
         readOnlyHint: true,
@@ -124,7 +128,10 @@ export function registerPortfolioTools(
       },
     },
     async (params) => {
-      const data = await client.getPnlHistory(params);
+      const data = await client.getPnlHistory({
+        ...params,
+        interval: params.interval ?? "1d",
+      });
       return {
         content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
