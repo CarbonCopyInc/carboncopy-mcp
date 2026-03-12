@@ -116,7 +116,7 @@ export function registerPortfolioTools(
           .int()
           .positive()
           .optional()
-          .describe("Number of days of history to return (default 30, max 365)."),
+          .describe("Number of days of history to return (default 30, max 90)."),
       }),
       annotations: {
         readOnlyHint: true,
