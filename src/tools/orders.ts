@@ -17,7 +17,7 @@ export function registerOrderTools(
           .string()
           .optional()
           .describe(
-            "Filter by order status (e.g. 'pending', 'filled', 'executed', 'cancelled').",
+            "Filter by order status: 'pending', 'filled', 'failed', or 'cancelled'.",
           ),
         limit: z
           .number()
