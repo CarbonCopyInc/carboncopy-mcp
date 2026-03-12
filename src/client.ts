@@ -84,6 +84,25 @@ export class CarbonCopyClient {
     return this.request("GET", `/api/v1/portfolio/positions${qs}`);
   }
 
+  getPnlHistory(params?: { days?: number }): Promise<unknown> {
+    const qs = buildQuery(params ?? {});
+    return this.request("GET", `/api/v1/portfolio/pnl-history${qs}`);
+  }
+
+  closePosition(body: {
+    positionId: string;
+    marketSlug: string;
+    direction: string;
+    shares: number;
+    outcome?: string;
+  }): Promise<unknown> {
+    return this.request("POST", "/api/v1/portfolio/positions/close", body);
+  }
+
+  getPnlByTrader(): Promise<unknown> {
+    return this.request("GET", "/api/v1/portfolio/pnl-by-trader");
+  }
+
   // Traders
   getTraders(): Promise<unknown> {
     return this.request("GET", "/api/v1/portfolio/traders");
