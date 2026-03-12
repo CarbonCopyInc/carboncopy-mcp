@@ -31,7 +31,7 @@ export function registerPortfolioTools(
     {
       title: "Get Portfolio History",
       description:
-        "Retrieve historical portfolio snapshots with optional pagination and date filtering.",
+        "Retrieve paginated copy-trade history with optional date filtering.",
       inputSchema: z.object({
         limit: z
           .number()
