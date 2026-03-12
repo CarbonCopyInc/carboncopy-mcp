@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "prepare": "npm run build",
+    "prepare": "husky",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
@@ -37,6 +37,7 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@vitest/coverage-v8": "^4.0.18",
+    "husky": "^9.1.7",
     "typescript": "^5.8.0",
     "vitest": "^4.0.18"
   }

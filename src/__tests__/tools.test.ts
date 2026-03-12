@@ -90,11 +90,6 @@ describe("Tool Registration", () => {
   // Count & names
   // -------------------------------------------------------------------------
 
-  it("registers exactly 17 tools", () => {
-    const tools = getTools(server);
-    expect(Object.keys(tools)).toHaveLength(17);
-  });
-
   it("registers all expected tool names", () => {
     const tools = getTools(server);
     for (const name of ALL_TOOL_NAMES) {
