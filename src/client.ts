@@ -79,12 +79,13 @@ export class CarbonCopyClient {
     cursor?: string;
     since?: string;
     until?: string;
+    status?: string;
   }): Promise<unknown> {
     const qs = buildQuery(params ?? {});
     return this.request("GET", `/api/v1/portfolio/positions${qs}`);
   }
 
-  getPnlHistory(params?: { days?: number }): Promise<unknown> {
+  getPnlHistory(params?: { days?: number; interval?: "1h" | "4h" | "1d" }): Promise<unknown> {
     const qs = buildQuery(params ?? {});
     return this.request("GET", `/api/v1/portfolio/pnl-history${qs}`);
   }
@@ -101,6 +102,10 @@ export class CarbonCopyClient {
 
   getPnlByTrader(): Promise<unknown> {
     return this.request("GET", "/api/v1/portfolio/pnl-by-trader");
+  }
+
+  getPnlByMarket(): Promise<unknown> {
+    return this.request("GET", "/api/v1/portfolio/pnl-by-market");
   }
 
   // Traders

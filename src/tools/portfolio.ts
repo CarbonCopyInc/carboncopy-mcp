@@ -31,7 +31,7 @@ export function registerPortfolioTools(
     {
       title: "Get Portfolio History",
       description:
-        "Retrieve paginated copy-trade history with optional date filtering.",
+        "Retrieve paginated copy-trade history (individual trade records) with optional date filtering. For portfolio value over time, use get_pnl_history instead.",
       inputSchema: z.object({
         limit: z
           .number()
@@ -70,7 +70,7 @@ export function registerPortfolioTools(
     {
       title: "Get Positions",
       description:
-        "Retrieve current or historical portfolio positions with optional pagination and date filtering.",
+        "Retrieve portfolio positions with optional pagination and date filtering. Use the status param to see open, closed, or all positions.",
       inputSchema: z.object({
         limit: z
           .number()
@@ -90,6 +90,10 @@ export function registerPortfolioTools(
           .string()
           .optional()
           .describe("ISO 8601 timestamp — only return records before this time."),
+        status: z
+          .enum(["open", "closed", "all"])
+          .optional()
+          .describe("Filter by position status: 'open' (default), 'closed', or 'all'."),
       }),
       annotations: {
         readOnlyHint: true,
@@ -117,6 +121,10 @@ export function registerPortfolioTools(
           .positive()
           .optional()
           .describe("Number of days of history to return (default 30, max 90)."),
+        interval: z
+          .enum(["1h", "4h", "1d"])
+          .default("1d")
+          .describe("Aggregation interval for snapshots (default '1d'). Use '1h' or '4h' for more granularity."),
       }),
       annotations: {
         readOnlyHint: true,
@@ -124,7 +132,11 @@ export function registerPortfolioTools(
       },
     },
     async (params) => {
-      const data = await client.getPnlHistory(params);
+      const data = await client.getPnlHistory({
+        ...params,
+        // Zod .default() applies during MCP SDK parsing but not in direct handler calls (e.g. tests)
+        interval: params.interval ?? "1d",
+      });
       return {
         content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
@@ -175,6 +187,26 @@ export function registerPortfolioTools(
     },
     async () => {
       const data = await client.getPnlByTrader();
+      return {
+        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
+      };
+    }
+  );
+
+  server.registerTool(
+    "get_pnl_by_market",
+    {
+      title: "Get PnL by Market",
+      description:
+        "Get a breakdown of realised P&L grouped by each market you have traded.",
+      inputSchema: z.object({}),
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: false,
+      },
+    },
+    async () => {
+      const data = await client.getPnlByMarket();
       return {
         content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
       };
