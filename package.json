@@ -1,13 +1,14 @@
 {
   "name": "@carbon-copy/mcp",
   "version": "0.4.0",
-  "description": "An MCP server that gives AI agents programmatic access to Carbon Copy — a Polymarket copy-trading platform.",
+  "description": "An MCP server that gives AI agents programmatic access to Carbon Copy \u2014 a Polymarket copy-trading platform.",
   "type": "module",
   "files": [
     "dist"
   ],
   "bin": {
-    "carboncopy-mcp": "dist/index.js"
+    "carboncopy-mcp": "dist/index.js",
+    "carboncopy-mcp-http": "dist/http.js"
   },
   "scripts": {
     "build": "tsc",
@@ -15,7 +16,9 @@
     "prepare": "husky",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "start": "node dist/index.js",
+    "start:http": "node dist/http.js"
   },
   "repository": {
     "type": "git",

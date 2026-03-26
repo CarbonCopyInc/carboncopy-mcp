@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { CarbonCopyClient } from "../client.js";
+import { jsonToolResult } from "./response.js";
 
 export function registerOrderTools(
   server: McpServer,
@@ -49,14 +50,7 @@ export function registerOrderTools(
     },
     async (params) => {
       const data = await client.getOrders(params);
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(data ?? { success: true }, null, 2),
-          },
-        ],
-      };
+      return jsonToolResult(data);
     },
   );
 
@@ -75,14 +69,7 @@ export function registerOrderTools(
     },
     async ({ id }) => {
       const data = await client.getOrder(id);
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(data ?? { success: true }, null, 2),
-          },
-        ],
-      };
+      return jsonToolResult(data);
     },
   );
 }

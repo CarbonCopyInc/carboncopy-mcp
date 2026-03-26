@@ -20,9 +20,38 @@ An [MCP](https://modelcontextprotocol.io) server that gives AI agents programmat
 1. A [Carbon Copy](https://carboncopy.inc) account
 2. An API key (generate from the dashboard)
 
-### Usage with Claude Desktop
+## Running Modes
 
-Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+This package supports two first-class transports from one shared tool/resource surface:
+
+- **stdio mode** (`carboncopy-mcp`) for local subprocess clients (Claude Desktop, Cursor, etc.)
+- **hosted Streamable HTTP mode** (`carboncopy-mcp-http`) for remotely hosted MCP
+
+## Configuration
+
+### Required env vars
+
+- `CARBONCOPY_API_KEY` (required): Carbon Copy API key (`cc_<64 hex chars>`)
+
+### Optional API env vars
+
+- `CARBONCOPY_BASE_URL` (optional): Carbon Copy API origin (default: `https://www.carboncopy.inc`)
+
+### HTTP mode env vars
+
+- `MCP_HTTP_HOST` (default: `0.0.0.0`)
+- `MCP_HTTP_PORT` (default: `3000`)
+- `MCP_HTTP_ENDPOINT` (default: `/mcp`)
+- `MCP_HTTP_ALLOWED_ORIGINS` (optional CSV allow-list, e.g. `https://app.example.com,https://admin.example.com`)
+- `MCP_HTTP_ALLOWED_HOSTS` (optional CSV allow-list for `Host` header, e.g. `mcp.example.com,localhost`)
+
+If `MCP_HTTP_ALLOWED_ORIGINS` or `MCP_HTTP_ALLOWED_HOSTS` are unset, they default to allow-all.
+
+## Usage (stdio)
+
+### Claude Desktop
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
@@ -38,9 +67,9 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 }
 ```
 
-### Usage with Cursor
+### Cursor
 
-Add to `.cursor/mcp.json` in your project:
+Add to `.cursor/mcp.json`:
 
 ```json
 {
@@ -51,6 +80,48 @@ Add to `.cursor/mcp.json` in your project:
       "env": {
         "CARBONCOPY_API_KEY": "cc_your_key_here"
       }
+    }
+  }
+}
+```
+
+## Usage (hosted Streamable HTTP)
+
+### Run locally
+
+```bash
+CARBONCOPY_API_KEY=cc_your_key_here npm run start:http
+```
+
+or via npx without installing:
+
+```bash
+CARBONCOPY_API_KEY=cc_your_key_here npx -y -p @carbon-copy/mcp carboncopy-mcp-http
+```
+
+### Deploy
+
+Set environment variables in your hosting platform and expose:
+
+- `http://<host>:<port><endpoint>` (default `http://0.0.0.0:3000/mcp`)
+
+For production, set:
+
+- `MCP_HTTP_HOST=0.0.0.0`
+- `MCP_HTTP_PORT=<platform port>`
+- `MCP_HTTP_ENDPOINT=/mcp` (or your preferred path)
+- `MCP_HTTP_ALLOWED_HOSTS=<public hostnames>`
+- `MCP_HTTP_ALLOWED_ORIGINS=<trusted web origins>`
+
+### Client connection to hosted endpoint
+
+Configure your MCP client to use Streamable HTTP URL mode and point it at your hosted endpoint, for example:
+
+```json
+{
+  "mcpServers": {
+    "carboncopy-http": {
+      "url": "https://mcp.example.com/mcp"
     }
   }
 }
@@ -65,6 +136,10 @@ Add to `.cursor/mcp.json` in your project:
 | `get_portfolio` | Portfolio summary: balance, positions value, unrealised P&L, win rate |
 | `get_portfolio_history` | Paginated trade history with optional date filtering |
 | `get_positions` | Open positions with pagination |
+| `get_pnl_history` | Time-series portfolio P&L snapshots for charting |
+| `close_position` | Close an open position by selling shares |
+| `get_pnl_by_trader` | Realised P&L grouped by trader |
+| `get_pnl_by_market` | Realised P&L grouped by market |
 
 ### Trader Discovery
 
@@ -95,6 +170,8 @@ Add to `.cursor/mcp.json` in your project:
 | `get_account` | Account information |
 | `health` | API health check |
 
+All tools return both JSON text content and `structuredContent` in MCP responses.
+
 ## Resources
 
 | URI | Description |
@@ -109,6 +186,8 @@ npm install
 npm run build
 npm run dev           # Watch mode
 npm test              # Run tests
+npm run start         # stdio entrypoint
+npm run start:http    # hosted streamable HTTP entrypoint
 ```
 
 ## Authentication
@@ -116,8 +195,6 @@ npm test              # Run tests
 All tools authenticate via `CARBONCOPY_API_KEY` (format: `cc_<64 hex chars>`). Generate keys from the [Carbon Copy dashboard](https://carboncopy.inc).
 
 API keys carry **scoped permissions** (`portfolio`, `traders`, `orders`, `markets`, `account`). Tools return a `403` permission error if your key lacks the required scope.
-
-You can override the default API origin with `CARBONCOPY_BASE_URL` (defaults to `https://carboncopy.inc`).
 
 ## Rate Limits
 
