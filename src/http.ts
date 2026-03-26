@@ -9,6 +9,12 @@ import {
   isOriginAllowed,
   readHttpServerConfig,
 } from "./config.js";
+import {
+  isAuthorizedRequest,
+  PayloadTooLargeError,
+  readJsonBodyWithLimit,
+  writeJson,
+} from "./httpSecurity.js";
 import { createCarbonCopyMcpServer, SERVER_NAME } from "./server.js";
 
 type SessionRuntime = {
@@ -18,32 +24,18 @@ type SessionRuntime = {
 const sessionRuntimes = new Map<string, SessionRuntime>();
 const config = readHttpServerConfig();
 
-function writeJson(
-  res: ServerResponse,
-  statusCode: number,
-  body: Record<string, unknown>,
-): void {
-  const text = JSON.stringify(body);
-  res.statusCode = statusCode;
-  res.setHeader("Content-Type", "application/json");
-  res.setHeader("Content-Length", Buffer.byteLength(text));
-  res.end(text);
-}
-
 function setCorsHeaders(req: IncomingMessage, res: ServerResponse): void {
   const origin = req.headers.origin;
   if (!origin) return;
 
-  if (config.allowedOrigins.length === 0) {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-  } else if (isOriginAllowed(origin, config.allowedOrigins)) {
+  if (isOriginAllowed(origin, config.allowedOrigins)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
   }
 
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type, MCP-Session-Id, MCP-Protocol-Version, Last-Event-ID",
+    "Authorization, Content-Type, MCP-Session-Id, MCP-Protocol-Version, Last-Event-ID",
   );
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
 }
@@ -106,22 +98,6 @@ function rejectIfDisallowedOrigin(
   return false;
 }
 
-async function readJsonBody(req: IncomingMessage): Promise<unknown | undefined> {
-  if (req.method !== "POST") return undefined;
-
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  }
-
-  if (chunks.length === 0) return undefined;
-
-  const bodyText = Buffer.concat(chunks).toString("utf8").trim();
-  if (!bodyText) return undefined;
-
-  return JSON.parse(bodyText) as unknown;
-}
-
 function isInitializeRequest(body: unknown): boolean {
   if (!body || typeof body !== "object" || Array.isArray(body)) return false;
 
@@ -171,6 +147,23 @@ function requestPath(req: IncomingMessage): string {
   return url.pathname;
 }
 
+function rejectIfUnauthorized(
+  req: IncomingMessage,
+  res: ServerResponse,
+): boolean {
+  const authHeader = Array.isArray(req.headers.authorization)
+    ? req.headers.authorization[0]
+    : req.headers.authorization;
+
+  if (!isAuthorizedRequest(authHeader, config.authToken)) {
+    res.setHeader("WWW-Authenticate", "Bearer");
+    writeJson(res, 401, { error: "Unauthorized" });
+    return true;
+  }
+
+  return false;
+}
+
 const httpServer = createServer(async (req, res) => {
   try {
     setCorsHeaders(req, res);
@@ -200,10 +193,17 @@ const httpServer = createServer(async (req, res) => {
       return;
     }
 
+    if (rejectIfUnauthorized(req, res)) return;
+
     let body: unknown | undefined;
     try {
-      body = await readJsonBody(req);
-    } catch {
+      body = await readJsonBodyWithLimit(req, config.maxBodyBytes);
+    } catch (error) {
+      if (error instanceof PayloadTooLargeError) {
+        writeJson(res, 413, { error: error.message });
+        return;
+      }
+
       writeJson(res, 400, { error: "Malformed JSON body" });
       return;
     }

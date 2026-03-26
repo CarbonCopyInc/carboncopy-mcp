@@ -4,6 +4,8 @@ export type HttpServerConfig = {
   endpoint: string;
   allowedOrigins: string[];
   allowedHosts: string[];
+  authToken: string;
+  maxBodyBytes: number;
 };
 
 function parseCsv(value: string | undefined): string[] {
@@ -32,6 +34,45 @@ function parsePort(value: string | undefined): number {
   return parsed;
 }
 
+function parsePositiveInt(
+  value: string | undefined,
+  variableName: string,
+  fallback: number,
+): number {
+  if (!value) return fallback;
+
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(
+      `Invalid ${variableName}: ${value}. Expected a positive integer.`,
+    );
+  }
+
+  return parsed;
+}
+
+function defaultAllowedHosts(host: string): string[] {
+  const normalizedHost = host.toLowerCase();
+
+  if (
+    normalizedHost === "0.0.0.0" ||
+    normalizedHost === "::" ||
+    normalizedHost === "::0"
+  ) {
+    return ["localhost", "127.0.0.1", "[::1]"];
+  }
+
+  if (normalizedHost === "127.0.0.1") {
+    return ["127.0.0.1", "localhost"];
+  }
+
+  if (normalizedHost === "::1") {
+    return ["[::1]", "localhost"];
+  }
+
+  return [normalizedHost];
+}
+
 export function requireCarbonCopyApiKey(
   env: NodeJS.ProcessEnv = process.env,
 ): string {
@@ -45,27 +86,50 @@ export function requireCarbonCopyApiKey(
   return apiKey;
 }
 
+export function requireHttpBearerToken(
+  env: NodeJS.ProcessEnv = process.env,
+): string {
+  const token = env.MCP_HTTP_BEARER_TOKEN?.trim();
+  if (!token) {
+    throw new Error(
+      "MCP_HTTP_BEARER_TOKEN environment variable is required for hosted HTTP mode.",
+    );
+  }
+
+  return token;
+}
+
 export function readHttpServerConfig(
   env: NodeJS.ProcessEnv = process.env,
 ): HttpServerConfig {
+  const host = env.MCP_HTTP_HOST?.trim() || "127.0.0.1";
+  const configuredAllowedHosts = parseCsv(env.MCP_HTTP_ALLOWED_HOSTS).map((value) =>
+    value.toLowerCase(),
+  );
+
   return {
-    host: env.MCP_HTTP_HOST?.trim() || "0.0.0.0",
+    host,
     port: parsePort(env.MCP_HTTP_PORT),
     endpoint: normalizeEndpoint(env.MCP_HTTP_ENDPOINT),
     allowedOrigins: parseCsv(env.MCP_HTTP_ALLOWED_ORIGINS),
-    allowedHosts: parseCsv(env.MCP_HTTP_ALLOWED_HOSTS).map((host) =>
-      host.toLowerCase(),
+    allowedHosts:
+      configuredAllowedHosts.length > 0
+        ? configuredAllowedHosts
+        : defaultAllowedHosts(host),
+    authToken: requireHttpBearerToken(env),
+    maxBodyBytes: parsePositiveInt(
+      env.MCP_HTTP_MAX_BODY_BYTES,
+      "MCP_HTTP_MAX_BODY_BYTES",
+      1024 * 1024,
     ),
   };
 }
 
 export function isOriginAllowed(origin: string, allowedOrigins: string[]): boolean {
-  if (allowedOrigins.length === 0) return true;
   if (allowedOrigins.includes("*")) return true;
   return allowedOrigins.includes(origin);
 }
 
 export function isHostAllowed(host: string, allowedHosts: string[]): boolean {
-  if (allowedHosts.length === 0) return true;
   return allowedHosts.includes(host.toLowerCase());
 }

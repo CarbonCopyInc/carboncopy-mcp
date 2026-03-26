@@ -29,7 +29,7 @@ This package supports two first-class transports from one shared tool/resource s
 
 ## Configuration
 
-### Required env vars
+### Required env vars (all modes)
 
 - `CARBONCOPY_API_KEY` (required): Carbon Copy API key (`cc_<64 hex chars>`)
 
@@ -37,15 +37,26 @@ This package supports two first-class transports from one shared tool/resource s
 
 - `CARBONCOPY_BASE_URL` (optional): Carbon Copy API origin (default: `https://www.carboncopy.inc`)
 
-### HTTP mode env vars
+### Required env vars (HTTP mode)
 
-- `MCP_HTTP_HOST` (default: `0.0.0.0`)
+- `MCP_HTTP_BEARER_TOKEN` (required): inbound bearer token used to authenticate all MCP HTTP requests
+
+### Optional env vars (HTTP mode)
+
+- `MCP_HTTP_HOST` (default: `127.0.0.1`)
 - `MCP_HTTP_PORT` (default: `3000`)
 - `MCP_HTTP_ENDPOINT` (default: `/mcp`)
-- `MCP_HTTP_ALLOWED_ORIGINS` (optional CSV allow-list, e.g. `https://app.example.com,https://admin.example.com`)
-- `MCP_HTTP_ALLOWED_HOSTS` (optional CSV allow-list for `Host` header, e.g. `mcp.example.com,localhost`)
+- `MCP_HTTP_MAX_BODY_BYTES` (default: `1048576` / 1 MiB)
+- `MCP_HTTP_ALLOWED_ORIGINS` (optional CSV allow-list; default empty = block all cross-origin browser requests unless explicitly listed)
+- `MCP_HTTP_ALLOWED_HOSTS` (optional CSV allow-list; defaults are derived from bind host)
 
-If `MCP_HTTP_ALLOWED_ORIGINS` or `MCP_HTTP_ALLOWED_HOSTS` are unset, they default to allow-all.
+Host default behavior when `MCP_HTTP_ALLOWED_HOSTS` is unset:
+
+- `MCP_HTTP_HOST=127.0.0.1` → allow `127.0.0.1`, `localhost`
+- `MCP_HTTP_HOST=::1` → allow `[::1]`, `localhost`
+- `MCP_HTTP_HOST=0.0.0.0` / `::` → allow only local hostnames by default (`localhost`, `127.0.0.1`, `[::1]`)
+
+For public deployments, explicitly set both `MCP_HTTP_ALLOWED_HOSTS` and `MCP_HTTP_ALLOWED_ORIGINS`.
 
 ## Usage (stdio)
 
@@ -90,38 +101,47 @@ Add to `.cursor/mcp.json`:
 ### Run locally
 
 ```bash
-CARBONCOPY_API_KEY=cc_your_key_here npm run start:http
+CARBONCOPY_API_KEY=cc_your_key_here \
+MCP_HTTP_BEARER_TOKEN=replace-with-strong-secret \
+npm run start:http
 ```
 
 or via npx without installing:
 
 ```bash
-CARBONCOPY_API_KEY=cc_your_key_here npx -y -p @carbon-copy/mcp carboncopy-mcp-http
+CARBONCOPY_API_KEY=cc_your_key_here \
+MCP_HTTP_BEARER_TOKEN=replace-with-strong-secret \
+npx -y -p @carbon-copy/mcp carboncopy-mcp-http
 ```
 
 ### Deploy
 
 Set environment variables in your hosting platform and expose:
 
-- `http://<host>:<port><endpoint>` (default `http://0.0.0.0:3000/mcp`)
+- `http://<host>:<port><endpoint>` (default `http://127.0.0.1:3000/mcp`)
 
-For production, set:
+For production, set at least:
 
-- `MCP_HTTP_HOST=0.0.0.0`
+- `MCP_HTTP_HOST=0.0.0.0` (or platform equivalent)
 - `MCP_HTTP_PORT=<platform port>`
 - `MCP_HTTP_ENDPOINT=/mcp` (or your preferred path)
+- `MCP_HTTP_BEARER_TOKEN=<long-random-secret>`
 - `MCP_HTTP_ALLOWED_HOSTS=<public hostnames>`
 - `MCP_HTTP_ALLOWED_ORIGINS=<trusted web origins>`
+- `MCP_HTTP_MAX_BODY_BYTES=<appropriate limit>`
 
 ### Client connection to hosted endpoint
 
-Configure your MCP client to use Streamable HTTP URL mode and point it at your hosted endpoint, for example:
+Configure your MCP client to use Streamable HTTP URL mode and send `Authorization: Bearer <MCP_HTTP_BEARER_TOKEN>` to your hosted endpoint, for example:
 
 ```json
 {
   "mcpServers": {
     "carboncopy-http": {
-      "url": "https://mcp.example.com/mcp"
+      "url": "https://mcp.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer replace-with-your-token"
+      }
     }
   }
 }
@@ -192,7 +212,9 @@ npm run start:http    # hosted streamable HTTP entrypoint
 
 ## Authentication
 
-All tools authenticate via `CARBONCOPY_API_KEY` (format: `cc_<64 hex chars>`). Generate keys from the [Carbon Copy dashboard](https://carboncopy.inc).
+All tools authenticate upstream via `CARBONCOPY_API_KEY` (format: `cc_<64 hex chars>`). Generate keys from the [Carbon Copy dashboard](https://carboncopy.inc).
+
+In hosted HTTP mode, inbound requests must also present `Authorization: Bearer <MCP_HTTP_BEARER_TOKEN>`.
 
 API keys carry **scoped permissions** (`portfolio`, `traders`, `orders`, `markets`, `account`). Tools return a `403` permission error if your key lacks the required scope.
 
