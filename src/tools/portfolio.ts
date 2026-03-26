@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { CarbonCopyClient } from "../client.js";
+import { jsonToolResult } from "./response.js";
 
 export function registerPortfolioTools(
   server: McpServer,
@@ -20,9 +21,7 @@ export function registerPortfolioTools(
     },
     async () => {
       const data = await client.getPortfolio();
-      return {
-        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
-      };
+      return jsonToolResult(data);
     }
   );
 
@@ -59,9 +58,7 @@ export function registerPortfolioTools(
     },
     async (params) => {
       const data = await client.getPortfolioHistory(params);
-      return {
-        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
-      };
+      return jsonToolResult(data);
     }
   );
 
@@ -102,9 +99,7 @@ export function registerPortfolioTools(
     },
     async (params) => {
       const data = await client.getPositions(params);
-      return {
-        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
-      };
+      return jsonToolResult(data);
     }
   );
 
@@ -137,9 +132,7 @@ export function registerPortfolioTools(
         // Zod .default() applies during MCP SDK parsing but not in direct handler calls (e.g. tests)
         interval: params.interval ?? "1d",
       });
-      return {
-        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
-      };
+      return jsonToolResult(data);
     }
   );
 
@@ -167,9 +160,7 @@ export function registerPortfolioTools(
     },
     async (params) => {
       const data = await client.closePosition(params);
-      return {
-        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
-      };
+      return jsonToolResult(data);
     }
   );
 
@@ -187,9 +178,7 @@ export function registerPortfolioTools(
     },
     async () => {
       const data = await client.getPnlByTrader();
-      return {
-        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
-      };
+      return jsonToolResult(data);
     }
   );
 
@@ -207,9 +196,7 @@ export function registerPortfolioTools(
     },
     async () => {
       const data = await client.getPnlByMarket();
-      return {
-        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
-      };
+      return jsonToolResult(data);
     }
   );
 }

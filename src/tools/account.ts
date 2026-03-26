@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { CarbonCopyClient } from "../client.js";
+import { jsonToolResult } from "./response.js";
 
 export function registerAccountTools(
   server: McpServer,
@@ -20,9 +21,7 @@ export function registerAccountTools(
     },
     async () => {
       const data = await client.getAccount();
-      return {
-        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
-      };
+      return jsonToolResult(data);
     }
   );
 
@@ -40,9 +39,7 @@ export function registerAccountTools(
     },
     async () => {
       const data = await client.health();
-      return {
-        content: [{ type: "text", text: JSON.stringify(data ?? { success: true }, null, 2) }],
-      };
+      return jsonToolResult(data);
     }
   );
 }

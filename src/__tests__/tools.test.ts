@@ -51,6 +51,7 @@ const ALL_TOOL_NAMES = [
   "get_pnl_history",
   "close_position",
   "get_pnl_by_trader",
+  "get_pnl_by_market",
   "list_traders",
   "discover_traders",
   "follow_trader",
@@ -218,11 +219,13 @@ describe("Tool Registration", () => {
       const tool = getTools(server)["get_portfolio"];
       const result = (await tool.handler({}, {})) as {
         content: { type: string; text: string }[];
+        structuredContent: unknown;
       };
 
       expect(result.content).toHaveLength(1);
       expect(result.content[0].type).toBe("text");
       expect(JSON.parse(result.content[0].text)).toEqual(responseData);
+      expect(result.structuredContent).toEqual(responseData);
     });
 
     it("get_portfolio_history — passes params and returns JSON text", async () => {
@@ -391,10 +394,12 @@ describe("Tool Registration", () => {
       const tool = getTools(server)["unfollow_trader"];
       const result = (await tool.handler({ wallet: "0xabc" }, {})) as {
         content: { type: string; text: string }[];
+        structuredContent: unknown;
       };
 
       expect(result.content[0].type).toBe("text");
       expect(JSON.parse(result.content[0].text)).toEqual({ success: true });
+      expect(result.structuredContent).toEqual({ success: true });
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
       expect(url).toContain("/api/v1/portfolio/traders/0xabc");
       expect(init.method).toBe("DELETE");
