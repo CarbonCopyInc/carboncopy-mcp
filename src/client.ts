@@ -2,7 +2,7 @@ const BASE_URL =
   process.env.CARBONCOPY_BASE_URL?.trim() || "https://www.carboncopy.inc";
 
 function buildQuery(
-  params: Record<string, string | number | undefined>,
+  params: Record<string, string | number | boolean | undefined>,
 ): string {
   const qs = Object.entries(params)
     .filter(([, v]) => v !== undefined)
@@ -76,10 +76,10 @@ export class CarbonCopyClient {
 
   getPositions(params?: {
     limit?: number;
-    cursor?: string;
     since?: string;
     until?: string;
     status?: string;
+    fresh?: boolean;
   }): Promise<unknown> {
     const qs = buildQuery(params ?? {});
     return this.request("GET", `/api/v1/portfolio/positions${qs}`);

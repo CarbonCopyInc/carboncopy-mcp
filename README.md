@@ -4,7 +4,7 @@ An [MCP](https://modelcontextprotocol.io) server that gives AI agents programmat
 
 ## Features
 
-- **Portfolio Management** — View portfolio summary (including live positions value and unrealised P&L), open positions, and trade history
+- **Portfolio Management** — View portfolio summary (including exposure, gross volume, and unrealized P&L), open positions, and trade history
 - **Trader Discovery** — Search and filter traders by profit, ROI, win rate, volume, and followers
 - **Follow Management** — Follow/unfollow traders, pause/resume copy trading, adjust per-trader settings
 - **Batch Operations** — Update up to 100 followed traders in a single call
@@ -62,9 +62,9 @@ Add to `.cursor/mcp.json` in your project:
 
 | Tool | Description |
 |------|-------------|
-| `get_portfolio` | Portfolio summary: balance, positions value, unrealised P&L, win rate |
+| `get_portfolio` | Portfolio summary: balance, exposure, gross volume, and P&L |
 | `get_portfolio_history` | Paginated trade history with optional date filtering |
-| `get_positions` | Open positions with pagination |
+| `get_positions` | Live open positions with optional filters |
 
 ### Trader Discovery
 

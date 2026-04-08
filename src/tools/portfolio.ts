@@ -70,7 +70,7 @@ export function registerPortfolioTools(
     {
       title: "Get Positions",
       description:
-        "Retrieve portfolio positions with optional pagination and date filtering. Use the status param to see open, closed, or all positions.",
+        "Retrieve live open portfolio positions (mark-to-market) with optional filtering. status=closed currently returns an empty set.",
       inputSchema: z.object({
         limit: z
           .number()
@@ -78,22 +78,22 @@ export function registerPortfolioTools(
           .positive()
           .optional()
           .describe("Maximum number of records to return."),
-        cursor: z
-          .string()
-          .optional()
-          .describe("Pagination cursor from a previous response."),
         since: z
           .string()
           .optional()
-          .describe("ISO 8601 timestamp — only return records after this time."),
+          .describe("ISO 8601 timestamp — only return positions opened after this time."),
         until: z
           .string()
           .optional()
-          .describe("ISO 8601 timestamp — only return records before this time."),
+          .describe("ISO 8601 timestamp — only return positions opened before this time."),
         status: z
           .enum(["open", "closed", "all"])
           .optional()
           .describe("Filter by position status: 'open' (default), 'closed', or 'all'."),
+        fresh: z
+          .boolean()
+          .optional()
+          .describe("Bypass cached positions fetch when true."),
       }),
       annotations: {
         readOnlyHint: true,
@@ -113,7 +113,7 @@ export function registerPortfolioTools(
     {
       title: "Get PnL History",
       description:
-        "Retrieve time-series portfolio P&L data for charting performance over time. Returns snapshots with realised/unrealised P&L breakdown.",
+        "Retrieve time-series portfolio P&L data for charting performance over time. Returns snapshots with realized/unrealized P&L breakdown.",
       inputSchema: z.object({
         days: z
           .number()
@@ -178,7 +178,7 @@ export function registerPortfolioTools(
     {
       title: "Get PnL by Trader",
       description:
-        "Get a breakdown of realised P&L grouped by each trader you copy.",
+        "Get a breakdown of realized P&L grouped by each trader you copy.",
       inputSchema: z.object({}),
       annotations: {
         readOnlyHint: true,
@@ -198,7 +198,7 @@ export function registerPortfolioTools(
     {
       title: "Get PnL by Market",
       description:
-        "Get a breakdown of realised P&L grouped by each market you have traded.",
+        "Get a breakdown of realized P&L grouped by each market you have traded.",
       inputSchema: z.object({}),
       annotations: {
         readOnlyHint: true,
